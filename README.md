@@ -1,3 +1,11 @@
+# overview
+
+This is an implementation of a tree viewer assignment. Principal source files are:
+- `perl/main.pl` for backend
+- `tree-view/src/App.vue` and `tree-view/src/Node.vue` for frontend (and `tree-view/src/assets/node.css`)
+
+The `tree-view` folder is created from a Vue install template. Primary source of information for implementing backend was: [https://metacpan.org/dist/Dancer2/view/lib/Dancer2/Tutorial.pod](https://metacpan.org/dist/Dancer2/view/lib/Dancer2/Tutorial.pod)
+
 # requirements
 - Frontend: JavaScript (see json packages)
 - Backend: Perl with `Dancer2`, `DBI` and `XML::LibXML`
