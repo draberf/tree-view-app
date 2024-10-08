@@ -13,7 +13,8 @@ my $username = $conf->find('configuration/database-username');
 my $password = $conf->find('configuration/database-pw');
 
 
-# database connection subroutines
+# === database connection subroutine ===
+
 sub connect_db {
     return DBI->connect(
         "DBI:mysql:database=$db_name;host=localhost",
@@ -22,7 +23,17 @@ sub connect_db {
         { RaiseError => 1, AutoCommit => 1 }) or die $DBI::errstr;
 }
 
-# database actions subroutines
+# === database actions subroutines ===
+
+# Checks if a tree of a given id exists in the database
+#
+# params:
+# $dbh - handler to database connection
+# $id - tree ID to search for
+# 
+# returns:
+# 0 if tree exists, -1 if not
+#
 sub check_if_tree_exists {
     my ($dbh, $id) = @_;
 
@@ -39,6 +50,16 @@ sub check_if_tree_exists {
     return 0;
 }
 
+# returns a hashref of nodes that belong to a tree of a given ID
+#
+# params:
+# $dbh - handler to database connection
+# $id - tree ID to get nodes of
+#
+# returns:
+# reference to a hash of all nodes of a given tree in the database in the form of:
+# { id => { id => ..., parent => ...} }
+#
 sub get_tree {
     my ($dbh, $id) = @_;
 
@@ -56,6 +77,16 @@ sub get_tree {
     return $hashref;
 }
 
+# returns a tree-like hashref of a tree of a given ID if it finds it
+# 
+# params:
+# $dbh - handler to database connection
+# $id - tree ID to get nodes of
+#
+# returns:
+# a hashref of the tree structured like a tree:
+# { id => ..., children => [...] }
+#
 sub request_tree {
     my ($dbh, $id) = @_;
 
@@ -71,7 +102,17 @@ sub request_tree {
     return \%transformed_tree;
 }
 
-# call on a {id => x, children => []} hash reference
+# === tree operations ===
+
+# adds children to a node from a parents hash
+# 
+# params:
+# $parent_ref - hashref pointing to a { id => ..., children => [] } node repr.
+# %parent_hash - hash of the children of all parent nodes in a tree:
+# { 1 => [2, 3] },
+# { 2 => [] },
+# { 3 => [4] }, etc.
+#
 sub add_children {
     my ($parent_ref, %parent_hash) = @_;
 
@@ -83,7 +124,16 @@ sub add_children {
     }
 }
 
-# tree operations
+# transforms a hash of nodes into a tree-like hash
+#
+# params:
+# %tree - hash of a tree in the form of:
+# { id => { id => ..., parent => ... }}
+#
+# returns:
+# a hashref of the tree structured like a tree:
+# { id => ..., children => [...] }
+#
 sub parse_tree_from_nodes {
     my (%tree) = @_;
 
@@ -116,14 +166,28 @@ sub parse_tree_from_nodes {
     return %actual_tree;
 }
 
+# add CORS header for each non-error to ensure delivery
 hook 'before' => sub {
     response_header 'Access-Control-Allow-Origin' => '*';
 };
 
+# test, isn't called from front-end
 get '/' => sub {
     return "Hello world!";
 };
 
+# GET request to get a tree-like JSON
+# 
+# params:
+# $id - ID of the tree to search for
+#
+# returns:
+# JSON object representing the tree as:
+# { 'id': ..., 'children': [...] }
+#
+# error:
+# 404 if tree with the ID isn't in database
+#
 get '/get_tree/:id' => sub {
     
     # get tree id
@@ -141,6 +205,19 @@ get '/get_tree/:id' => sub {
 
 };
 
+# POST request to add a node to a given tree
+#
+# params:
+# $tree_id - ID of a tree to add to
+# $parent_id - ID of the node to attach to
+# 
+# returns:
+# JSON object representing the updated tree as:
+# { 'id': ..., 'children': [...] }
+# 
+# error:
+# 404 if tree of a given ID doesn't exist
+#
 post '/add_node' => sub {
     my $tree_id = body_parameters->get('tree_id');
     my $parent_id = body_parameters->get('parent_id');
@@ -168,4 +245,5 @@ post '/add_node' => sub {
     return to_json($new_tree);
 };
 
+# run the server
 start;
