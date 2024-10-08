@@ -1,0 +1,5 @@
+<configuration>
+    <database-name>tree_db</database-name>
+    <database-user>username</database-user>
+    <database-pw>password</database-pw>
+</configuration>

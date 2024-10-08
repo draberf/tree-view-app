@@ -1,0 +1,14 @@
+.node {
+    margin:10px;
+    padding:10px;
+    width:100%;
+    border: 2px solid black;
+}
+
+.node_header {
+    text-align:center;
+}
+
+.node_children {
+    display:inline-flex;
+}
